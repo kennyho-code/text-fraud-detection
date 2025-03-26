@@ -115,9 +115,11 @@ class LSTMClassifier(nn.Module):
 
 
 def create_loaders(ds, train_dataset, test_dataset, vocab):
+    more_examples = additional_custom_spam()
     train_texts = [ds['train'][idx]['sms']
-                   for idx in train_dataset.indices]
-    train_labels = [ds['train'][idx]['label'] for idx in train_dataset.indices]
+                   for idx in train_dataset.indices] + [example['sms'] for example in more_examples]
+    train_labels = [ds['train'][idx]['label']
+                    for idx in train_dataset.indices] + [ex['label'] for ex in more_examples]
 
     test_texts = [ds['train'][idx]['sms'] for idx in test_dataset.indices]
     test_labels = [ds['train'][idx]['label'] for idx in test_dataset.indices]
@@ -217,6 +219,32 @@ def train_epoch(model, dataloader, criterion, optimizer, device):
 
         total_loss += loss.item()
     return total_loss / len(dataloader)
+
+
+def additional_custom_spam():
+    return [
+        {
+            'sms': """Hey this is Jalen with TEKsystems! I just left a voicemail so wanted to know when there is a better time to reach you?""",
+            'label': 1  # 1 for spam
+        },
+        {
+            'sms': """(Atlantic Union) Pending $749 transaction on your Checking from #QMB. Wasn't you? Access (aubsave.dnsalias.net) to cancel.""",
+            'label': 1
+        },
+        {
+            'sms': """E-ZPass final reminder:
+You have an outstanding toll.Your toll account balance is outstanding. If you fail to pay by March 16, 2025. you will face penalties or legal action.
+Now Payment:
+
+https://e-zpass.com-emzwsefyx.xin/us
+
+(Please reply Y, then exit the SMS and open it again to activate the link, or copy the link to your Safari browser and open it)
+Please settle your toll immediately after reading this message to avoid penalties for delaying the payment. 
+Thank you for your cooperation.""",
+            'label': 1
+        }
+        # Add more modern spam examples
+    ]
 
 
 def main():
